@@ -1,12 +1,10 @@
 package com.qslll.library.fragments;
 
-
-import android.animation.ObjectAnimator;
-import android.animation.PropertyValuesHolder;
-import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewCompat;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -20,13 +18,14 @@ import java.io.Serializable;
  * A simple {@link Fragment} subclass.
  */
 public class QsContainFragment extends Fragment {
+
+    private static final String BUNDLE_FRONT = "front";
+    private static final String BUNDLE_BACK = "back";
+
     Fragment fragment1, fragment2;
-    private ViewGroup back;
-    private ViewGroup front;
-    private ViewGroup layout3;
-    private View inflate;
-    private ValueAnimator valueAnimator;
-    private ObjectAnimator objectAnimator;
+    private View back;
+    private View front;
+    private View layout3;
 
     private float startY = 0;
     private View.OnClickListener listener;
@@ -35,16 +34,14 @@ public class QsContainFragment extends Fragment {
 //        return new QsContainFragment(fragment1, fragment2);
 //    }
     public QsContainFragment() {
-
+        // Required empty public constructor
     }
 
     public static QsContainFragment getInstance(Fragment front, Fragment back) {
-        // Required empty public constructor
-
         QsContainFragment fragment = new QsContainFragment();
         Bundle args = new Bundle();
-        args.putSerializable("front", (Serializable) front);
-        args.putSerializable("back", (Serializable) back);
+        args.putSerializable(BUNDLE_FRONT, (Serializable) front);
+        args.putSerializable(BUNDLE_BACK, (Serializable) back);
         fragment.setArguments(args);
         return fragment;
     }
@@ -52,24 +49,29 @@ public class QsContainFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        this.fragment1 = (Fragment) getArguments().get("front");
-        this.fragment2 = (Fragment) getArguments().get("back");
-        inflate = View.inflate(getActivity(), R.layout.fragment_qs_contain, null);
-        getChildFragmentManager().beginTransaction().add(R.id.front, fragment1).commit();
-        getChildFragmentManager().beginTransaction().add(R.id.bottomLayout, fragment2).commit();
+        this.fragment1 = (Fragment) getArguments().get(BUNDLE_FRONT);
+        this.fragment2 = (Fragment) getArguments().get(BUNDLE_BACK);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_qs_contain, container, false);
+    }
 
-        back = (ViewGroup) inflate.findViewById(R.id.back);
-        front = (ViewGroup) inflate.findViewById(R.id.front);
-        layout3 = (ViewGroup) inflate.findViewById(R.id.bottomLayout);
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        inflate.setOnTouchListener(new View.OnTouchListener() {
+        getChildFragmentManager().beginTransaction()
+            .add(R.id.front, fragment1)
+            .add(R.id.bottomLayout, fragment2)
+            .commit();
+
+        back = view.findViewById(R.id.back);
+        front = view.findViewById(R.id.front);
+        layout3 = view.findViewById(R.id.bottomLayout);
+
+        view.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 float my = 0;
@@ -91,45 +93,16 @@ public class QsContainFragment extends Fragment {
             }
         });
 
-        inflate.setOnClickListener(new View.OnClickListener() {
+        view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                if (objectAnimator != null) {
-//                    doAnimationOut();
-//                } else {
-//                    doAnimation();
-//                }
-                if (objectAnimator == null)
+                if (!isClosed()) {
                     doAnimation();
-                else
+                } else {
                     listener.onClick(v);
+                }
             }
         });
-        return inflate;
-    }
-
-    private void doAnimation() {
-        ViewGroup.LayoutParams layoutParams = layout3.getLayoutParams();
-        layoutParams.height = (int) (front.getHeight() * 1.2 / 4 * 1.2);
-        layout3.setLayoutParams(layoutParams);
-        PropertyValuesHolder layout1Y = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0, -front.getHeight() / 4);
-        PropertyValuesHolder scale1 = PropertyValuesHolder.ofFloat(View.SCALE_X, 1, 1);
-        valueAnimator = ObjectAnimator.ofPropertyValuesHolder(front, layout1Y, scale1);
-        PropertyValuesHolder layout2_scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.2f);
-        PropertyValuesHolder layout2_scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.2f);
-        objectAnimator = ObjectAnimator.ofPropertyValuesHolder(back, layout2_scaleX, layout2_scaleY);
-        back.setPivotY(0);
-        objectAnimator.start();
-        valueAnimator.start();
-    }
-
-    private void doAnimationOut() {
-        if (objectAnimator != null) {
-            valueAnimator.reverse();
-            objectAnimator.reverse();
-            objectAnimator = null;
-            valueAnimator = null;
-        }
     }
 
     /**
@@ -145,7 +118,7 @@ public class QsContainFragment extends Fragment {
      * @return
      */
     public boolean isClosed() {
-        return objectAnimator == null;
+        return ViewCompat.getScaleX(back) == 0;
     }
 
     /**
@@ -155,6 +128,26 @@ public class QsContainFragment extends Fragment {
      */
     public void setOnExpandingClickListener(View.OnClickListener listener) {
         this.listener = listener;
+    }
+
+    private void doAnimation() {
+        ViewGroup.LayoutParams layoutParams = layout3.getLayoutParams();
+        layoutParams.height = (int) (front.getHeight() * 1.2 / 4 * 1.2);
+        layout3.setLayoutParams(layoutParams);
+
+        ViewCompat.setTranslationY(front, 0f);
+        ViewCompat.animate(front).scaleX(1f).translationY(-front.getHeight() / 4f);
+        ViewCompat.setPivotY(back, 0);
+        ViewCompat.animate(back).scaleX(1.2f).scaleY(1.2f);
+
+        ViewCompat.setElevation(front, 30f);
+    }
+
+    private void doAnimationOut() {
+        ViewCompat.animate(front).scaleX(1f).translationY(0f);
+        ViewCompat.animate(back).scaleX(1f).scaleY(1f);
+
+        ViewCompat.setElevation(front, 20f);
     }
 
 }

@@ -12,8 +12,9 @@ public class Util {
         ViewGroup.LayoutParams layoutParams = v.getLayoutParams();
         ((ViewGroup) v.getParent()).setClipChildren(false);
         v.setClipChildren(false);
-        layoutParams.width = ((Activity)v.getContext()).getWindowManager().getDefaultDisplay().getWidth() / 7 * 5;
-        layoutParams.height = (int) ((layoutParams.width / 0.75));
+        int width = ((Activity)v.getContext()).getWindowManager().getDefaultDisplay().getWidth() / 7 * 5;
+        layoutParams.width = width;
+        layoutParams.height = (int) (width / 0.75f);
 
     }
 }
