@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -26,6 +27,8 @@ public class QsContainFragment extends Fragment {
     private View back;
     private View front;
     private View layout3;
+
+    private boolean closed = true;
 
     private float startY = 0;
     private View.OnClickListener listener;
@@ -84,7 +87,7 @@ public class QsContainFragment extends Fragment {
                         break;
                     case MotionEvent.ACTION_UP:
                         if (event.getY() - startY > 0) {
-                            doAnimationOut();
+                            close();
                             return true;
                         }
                         break;
@@ -96,7 +99,7 @@ public class QsContainFragment extends Fragment {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!isClosed()) {
+                if (isClosed()) {
                     doAnimation();
                 } else {
                     listener.onClick(v);
@@ -118,7 +121,10 @@ public class QsContainFragment extends Fragment {
      * @return
      */
     public boolean isClosed() {
-        return ViewCompat.getScaleX(back) == 0;
+//        Log.e("scale", ViewCompat.getScaleX(back)+""+(ViewCompat.getScaleX(back)!=1)+"!"+(ViewCompat.getScaleX(back)==1.2));
+//        return ((float)ViewCompat.getScaleX(back)) == 1.2;
+        Log.e("boolean", closed+"");
+        return closed;
     }
 
     /**
@@ -141,6 +147,7 @@ public class QsContainFragment extends Fragment {
         ViewCompat.animate(back).scaleX(1.2f).scaleY(1.2f);
 
         ViewCompat.setElevation(front, 30f);
+        closed = false;
     }
 
     private void doAnimationOut() {
@@ -148,6 +155,7 @@ public class QsContainFragment extends Fragment {
         ViewCompat.animate(back).scaleX(1f).scaleY(1f);
 
         ViewCompat.setElevation(front, 20f);
+        closed = true;
     }
 
 }
